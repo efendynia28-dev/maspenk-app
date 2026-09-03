@@ -28,7 +28,7 @@ jobs:
         run: |
           rm -rf maspenk_build
           mkdir -p maspenk_build
-          unzip -q maspenk-app-v27-native.zip -d maspenk_build
+          unzip -q maspenk-v28-native.zip -d maspenk_build
           DIR=$(find maspenk_build -name settings.gradle -type f -print -quit | xargs dirname)
           if [ -z "$DIR" ]; then
             echo "settings.gradle tidak ditemukan"
