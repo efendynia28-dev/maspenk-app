@@ -1,0 +1,48 @@
+name: MASPENK V27 Android Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK
+        run: |
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Extract MASPENK project
+        run: |
+          unzip -q maspenk-v27-native.zip -d maspenk_build
+          cd maspenk_build
+          if [ -f settings.gradle ]; then
+            echo "PROJECT_DIR=maspenk_build" >> "$GITHUB_ENV"
+          else
+            DIR=$(find . -name settings.gradle -type f -print -quit | xargs dirname)
+            echo "PROJECT_DIR=maspenk_build/$DIR" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build Debug APK
+        run: |
+          cd "$PROJECT_DIR"
+          gradle --no-daemon assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: maspenk-v27-apk
+          path: |
+            **/build/outputs/apk/debug/*.apk
