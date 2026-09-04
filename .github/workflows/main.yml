@@ -49,6 +49,7 @@ jobs:
           fi
           DIR=$(dirname "$PROJECT")
           cd "$DIR"
+          echo "android.useAndroidX=true" >> gradle.properties
           gradle --no-daemon assembleDebug
 
       - name: Prepare APK
