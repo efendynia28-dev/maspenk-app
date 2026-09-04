@@ -19,7 +19,7 @@ jobs:
             echo "Android project ZIP tidak ditemukan"
             exit 1
           fi
-          echo "Using: $ZIP"
+          echo "ZIP: $ZIP"
           unzip -q "$ZIP" -d build-src
 
       - name: Setup Java 17
@@ -47,23 +47,23 @@ jobs:
             echo "Project Android tidak ditemukan"
             exit 1
           fi
-          cd "$(dirname "$PROJECT")"
+          DIR=$(dirname "$PROJECT")
+          cd "$DIR"
           gradle --no-daemon assembleDebug
+
+      - name: Prepare APK
+        run: |
+          APK=$(find build-src -type f -name "*.apk" | head -n 1)
+          if [ -z "$APK" ]; then
+            echo "APK tidak ditemukan"
+            exit 1
+          fi
+          mkdir -p artifact
+          cp "$APK" artifact/app-debug.apk
+          echo "APK: $APK"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: maspenk-v29-apk
-          path: build-src/**/build/outputs/apk/debug/*.apk          echo "PROJECT_DIR=$DIR" >> "$GITHUB_ENV"
-      - name: Enable AndroidX
-        run: echo "android.useAndroidX=true" >> "$PROJECT_DIR/gradle.properties"
-      - name: Build APK
-        run: |
-         cd "$PROJECT_DIR"
-         gradle --no-daemon assembleDebug
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: maspenk-v27-apk
-          path: |
-            **/build/outputs/apk/debug/*.apk
+          path: artifact/app-debug.apk
