@@ -14,7 +14,7 @@ jobs:
       - name: Extract Android Project
         run: |
           mkdir build-src
-          ZIP=$(find . -type f -name "*.zip" ! -name "MASPENK_V29_CLEAN_V3.zip" | head -n 1)
+          ZIP=$(find . -type f -name "maspenk-v29-native.zip" | head -n 1)
           if [ -z "$ZIP" ]; then
             echo "Android project ZIP tidak ditemukan"
             exit 1
