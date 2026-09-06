@@ -31,45 +31,57 @@ jobs:
         with:
           gradle-version: '8.7'
 
+      - name: Fix Android Gradle Plugin
+        shell: bash
+        run: |
+          set -e
+
+          echo "Checking Gradle project..."
+
+          if [ -f "build.gradle" ]; then
+            echo "Found root build.gradle"
+
+            python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("build.gradle")
+          text = p.read_text()
+
+          old = "id 'com.android.application'"
+          new = "id 'com.android.application' version '8.7.3'"
+
+          if old in text and "com.android.application' version" not in text:
+              text = text.replace(old, new, 1)
+              p.write_text(text)
+              print("Android Gradle Plugin version added: 8.7.3")
+          else:
+              print("No root AGP modification required.")
+          PY
+          fi
+
       - name: Build MP mini APK
         run: |
+          set -e
           gradle --no-daemon assembleDebug
+
+      - name: Check APK
+        run: |
+          set -e
+
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+
+          if [ ! -f "$APK" ]; then
+            echo "APK tidak ditemukan!"
+            echo "Isi folder build:"
+            find . -type f -name "*.apk" -print
+            exit 1
+          fi
+
+          echo "APK berhasil dibuat:"
+          ls -lh "$APK"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: MP-mini-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.7'
-
-      - name: Build APK
-        run: |
-          PROJECT=$(find build-src -name "settings.gradle" -o -name "settings.gradle.kts" | head -n 1)
-          if [ -z "$PROJECT" ]; then
-            echo "Project Android tidak ditemukan"
-            exit 1
-          fi
-          DIR=$(dirname "$PROJECT")
-          cd "$DIR"
-          echo "android.useAndroidX=true" >> gradle.properties
-          gradle --no-daemon assembleDebug
-
-      - name: Prepare APK
-        run: |
-          APK=$(find build-src -type f -name "*.apk" | head -n 1)
-          if [ -z "$APK" ]; then
-            echo "APK tidak ditemukan"
-            exit 1
-          fi
-          mkdir -p artifact
-          cp "$APK" artifact/app-debug.apk
-          echo "APK: $APK"
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: maspenk-v29-apk
-          path: artifact/app-debug.apk
