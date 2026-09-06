@@ -1,7 +1,9 @@
-name: MASPENK V29 Android Build
+name: MP mini Android Build
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ main ]
 
 jobs:
   build:
@@ -10,17 +12,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Extract Android Project
-        run: |
-          mkdir build-src
-          ZIP=$(find . -type f -name "maspenk-v29-native.zip" | head -n 1)
-          if [ -z "$ZIP" ]; then
-            echo "Android project ZIP tidak ditemukan"
-            exit 1
-          fi
-          echo "ZIP: $ZIP"
-          unzip -q "$ZIP" -d build-src
 
       - name: Setup Java 17
         uses: actions/setup-java@v4
@@ -35,6 +26,20 @@ jobs:
         run: |
           sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Build MP mini APK
+        run: |
+          gradle --no-daemon assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MP-mini-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
